@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Product List</h1>
+
+        <div class="row">
+             {% for product in products %}
+            <div class="col-md-4">
+                <div class="card product-card">
+                    <a href="{{ url_for('product_details', product_id=product.id) }}"> <!-- Wrap the image with anchor tag -->
+                        <img src="{{ url_for('static', filename='img/' + product.photo) }}" alt="{{ product.name }}" class="card-img-top product-img">
+                    </a>
+                    <div class="card-body product-details">
+                        <h5 class="card-title product-name">{{ product.name }}</h5>
+                        <p class="card-text product-price">${{ product.price }}</p>
+                        <p class="card-text product-description">{{ product.description }}</p>
+                        <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+                            <button type="submit" class="btn btn-primary add-to-cart-btn">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="/cart" class="btn btn-primary">View Cart</a>
+    </footer>
+</body>
+</html>

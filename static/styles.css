@@ -1,0 +1,63 @@
+/* styles.css */
+
+/* CSS to set fixed width and height for images */
+img.product-photo {
+            width: 200px; /* Adjust as needed */
+            height: 200px; /* Adjust as needed */
+            object-fit: cover; /* Maintain aspect ratio and fill container */
+        }
+
+
+body {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .product-card {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 500px; /* Fixed height for all product cards */
+
+        }
+
+        .product-img {
+            width: 100%;
+            height: auto;
+        }
+
+        .product-details {
+            padding: 20px;
+        }
+
+        .product-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            margin-bottom: 10px;
+        }
+
+         .add-to-cart-btn {
+            width: 100%;
+            margin-top: 10px; /* Add margin-top to separate from product details */
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+        }
