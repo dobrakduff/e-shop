@@ -12,6 +12,17 @@
     <div class="container">
         <h1 class="text-center">Product List</h1>
 
+        <!-- Sorting Form -->
+        <form action="/" method="get" class="form-inline justify-content-end mb-3">
+            <label class="mr-2" for="sort_by">Sort by:</label>
+            <select class="form-control mr-2" id="sort_by" name="sort_by">
+                <option value="default" {% if request.args.get('sort_by') == 'default' %}selected{% endif %}>Default</option>
+                <option value="price_asc" {% if request.args.get('sort_by') == 'price_asc' %}selected{% endif %}>Price (Low to High)</option>
+                <option value="price_desc" {% if request.args.get('sort_by') == 'price_desc' %}selected{% endif %}>Price (High to Low)</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Sort</button>
+        </form>
+
         <div class="row">
              {% for product in products %}
             <div class="col-md-4">

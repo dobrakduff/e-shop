@@ -48,9 +48,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 
-# Commit 3: Defined routes
-
-
 @app.route('/add_to_cart/<int:product_id>', methods=['GET', 'POST'])
 def add_to_cart(product_id):
     if request.method == 'POST':
@@ -123,9 +120,6 @@ def load_user(user_id):
     return User.query.filter_by(id=user_id).first()
 
 
-
-
-
 @app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
     # Find the product by id
@@ -148,7 +142,15 @@ def delete_product(product_id):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    products = Product.query.all()
+    sort_by = request.args.get('sort_by', 'default')
+
+    if sort_by == 'price_asc':
+        products = Product.query.order_by(Product.price).all()
+    elif sort_by == 'price_desc':
+        products = Product.query.order_by(Product.price.desc()).all()
+    else:
+        products = Product.query.all()
+
     return render_template('index.html', products=products)
 
 
@@ -215,8 +217,5 @@ def edit_product(product_id):
     return render_template('edit_product.html', product=product)
 
 
-# Commit 4: Added basic functionality to routes
-
-# Commit 5: Ran Flask application if executed directly
 if __name__ == "__main__":
     app.run(debug=True)
