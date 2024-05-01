@@ -1,7 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 import os
+import warnings
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clothing_shop.db'
@@ -12,9 +14,11 @@ app.config['UPLOAD_FOLDER'] = 'static/img'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 login_manager = LoginManager(app)
 
+
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,6 +26,7 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text)
     photo = db.Column(db.String(100))
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,11 +41,11 @@ class CartItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=1)
 
 
-# Commit 2: Initialized Flask app and SQLAlchemy
-
-
 with app.app_context():
     db.create_all()
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
 
 # Commit 3: Defined routes
@@ -92,6 +97,20 @@ def login():
             return redirect(url_for('admin_panel'))
     return render_template('login.html')
 
+
+@app.before_request
+def check_admin():
+    if request.endpoint == 'admin_panel' and (not current_user.is_authenticated or current_user.username != 'admin'):
+        return redirect(url_for('login'))
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        return User.query.get(int(user_id))
+
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -101,7 +120,11 @@ def logout():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.filter_by(id=user_id).first()
+
+
+
+
 
 @app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
@@ -121,6 +144,8 @@ def delete_product(product_id):
     db.session.commit()
 
     return redirect(url_for('admin_panel'))
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     products = Product.query.all()
@@ -131,6 +156,7 @@ def home():
 def view_cart():
     cart_items = CartItem.query.all()
     return render_template('cart.html', cart_items=cart_items)
+
 
 @app.route('/product/<int:product_id>')
 def product_details(product_id):
@@ -159,6 +185,8 @@ def checkout():
 
     # Redirect the user to a confirmation page or any other appropriate page
     return redirect(url_for('view_cart'))
+
+
 @app.route('/remove_from_cart/<int:cart_item_id>', methods=['POST'])
 def remove_from_cart(cart_item_id):
     cart_item = CartItem.query.get_or_404(cart_item_id)
@@ -166,6 +194,25 @@ def remove_from_cart(cart_item_id):
     db.session.commit()
     return redirect(url_for('view_cart'))
 
+
+@app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    # Find the product by id
+    product = Product.query.get_or_404(product_id)
+
+    if request.method == 'POST':
+        # Update product details based on form submission
+        product.name = request.form['name']
+        product.price = request.form['price']
+        product.description = request.form['description']
+
+        # Save changes to the database
+        db.session.commit()
+
+        return redirect(url_for('admin_panel'))
+
+    # Render the edit product form with the product details
+    return render_template('edit_product.html', product=product)
 
 
 # Commit 4: Added basic functionality to routes
