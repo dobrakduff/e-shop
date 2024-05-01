@@ -6,8 +6,7 @@
     <title>Product List</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
@@ -35,7 +34,14 @@
     </div>
 
     <footer class="footer">
-        <a href="/cart" class="btn btn-primary">View Cart</a>
-    </footer>
+    <a href="/cart" class="btn btn-primary">View Cart</a>
+    <button onclick="goToAdminPanel()" class="btn btn-secondary">Admin Panel</button>
+</footer>
+
+<script>
+    function goToAdminPanel() {
+        window.location.href = "/admin";
+    }
+</script>
 </body>
 </html>

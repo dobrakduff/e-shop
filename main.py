@@ -1,11 +1,11 @@
 # Commit 1: Added SQLAlchemy model for Product
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request
 from flask_sqlalchemy import SQLAlchemy
-from flask import abort
-from sqlalchemy.ext.declarative import DeclarativeMeta
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clothing_shop.db'
+app.config['SECRET_KEY'] = 'pudge22211'
 db = SQLAlchemy(app)
 
 
@@ -43,6 +43,38 @@ def add_to_cart(product_id):
     return redirect(url_for('home'))
 
 
+@app.route('/admin/', methods=['GET', 'POST'])
+def admin_panel():
+    if request.method == 'POST':
+        # Handle form submission to add a new product
+        name = request.form['name']
+        price = float(request.form['price'])
+        description = request.form['description']
+        photo = request.form['photo']
+
+        # Create a new product
+        new_product = Product(name=name, price=price, description=description, photo=photo)
+
+        # Add the new product to the database
+        db.session.add(new_product)
+        db.session.commit()
+
+    # Query all products
+    products = Product.query.all()
+
+    return render_template('admin_panel.html', products=products)
+
+
+@app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    # Find the product by id
+    product = Product.query.get_or_404(product_id)
+
+    # Delete the product
+    db.session.delete(product)
+    db.session.commit()
+
+    return redirect(url_for('admin_panel'))
 @app.route("/", methods=["GET", "POST"])
 def home():
     products = Product.query.all()

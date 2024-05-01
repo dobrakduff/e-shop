@@ -1,3 +1,6 @@
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,29 +10,33 @@
 <body>
     <h1>Admin Panel</h1>
 
-    <h2>Add Product</h2>
-    <form action="/admin" method="POST">
+    <!-- Form to add a new product -->
+    <form action="{{ url_for('admin_panel') }}" method="post">
         <label for="name">Product Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
+        <input type="text" id="name" name="name" required><br>
 
         <label for="price">Price:</label>
-        <input type="number" id="price" name="price" step="0.01" required><br><br>
+        <input type="number" id="price" name="price" min="0" step="0.01" required><br>
 
         <label for="description">Description:</label><br>
-        <textarea id="description" name="description" rows="4" cols="50" required></textarea><br><br>
+        <textarea id="description" name="description" required></textarea><br>
 
         <label for="photo">Photo URL:</label>
-        <input type="text" id="photo" name="photo"><br><br>
+        <input type="text" id="photo" name="photo" required><br>
 
-        <input type="submit" value="Add Product">
+        <button type="submit">Add Product</button>
     </form>
 
-    <h2>Delete Product</h2>
+    <!-- List of existing products -->
+    <h2>Existing Products:</h2>
     <ul>
         {% for product in products %}
-            <li>
-                {{ product.name }} - <form action="/admin/delete_product/{{ product.id }}" method="POST"><button type="submit">Delete</button></form>
-            </li>
+        <li>
+            <strong>{{ product.name }}</strong> - ${{ product.price }}
+            <form action="{{ url_for('delete_product', product_id=product.id) }}" method="post">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
         {% endfor %}
     </ul>
 </body>
