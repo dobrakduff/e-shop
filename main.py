@@ -1,9 +1,7 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 import os
-import warnings
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clothing_shop.db'
@@ -16,8 +14,7 @@ login_manager = LoginManager(app)
 
 
 def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 class Product(db.Model):
@@ -40,6 +37,17 @@ class CartItem(db.Model):
     product = db.relationship('Product')
     quantity = db.Column(db.Integer, nullable=False, default=1)
 
+class OrderItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    shipping_address = db.Column(db.String(200), nullable=False)
+    shipping_method = db.Column(db.String(100), nullable=False)
+    products = db.relationship('Product', secondary='order_product', backref=db.backref('orders', lazy='dynamic'))
+
+order_product = db.Table('order_product',
+    db.Column('order_id', db.Integer, db.ForeignKey('order_item.id'), primary_key=True),
+    db.Column('product_id', db.Integer, db.ForeignKey('product.id'), primary_key=True)
+)
+
 
 with app.app_context():
     db.create_all()
@@ -48,7 +56,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 
-@app.route('/add_to_cart/<int:product_id>', methods=['GET', 'POST'])
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
     if request.method == 'POST':
         product = Product.query.get_or_404(product_id)
@@ -56,9 +64,6 @@ def add_to_cart(product_id):
         db.session.add(cart_item)
         db.session.commit()
         return redirect(url_for('home'))  # Redirect to the home page or wherever appropriate
-    else:
-        # Handle GET request if needed
-        pass
 
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -103,9 +108,7 @@ def check_admin():
 
 @login_manager.user_loader
 def load_user(user_id):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=DeprecationWarning)
-        return User.query.get(int(user_id))
+    return User.query.get(int(user_id))
 
 
 @app.route('/logout')
@@ -113,11 +116,6 @@ def load_user(user_id):
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.filter_by(id=user_id).first()
 
 
 @app.route('/admin/delete_product/<int:product_id>', methods=['POST'])
@@ -215,6 +213,33 @@ def edit_product(product_id):
 
     # Render the edit product form with the product details
     return render_template('edit_product.html', product=product)
+
+
+@app.route('/checkout', methods=['POST'])
+def checkout():
+    if request.method == 'POST':
+        shipping_address = request.form['shipping_address']
+        shipping_method = request.form['shipping_method']
+
+        # Retrieve cart items
+        cart_items = CartItem.query.all()
+
+        # Create a new order
+        new_order = OrderItem(shipping_address=shipping_address, shipping_method=shipping_method)
+
+        # Add products to the order
+        for cart_item in cart_items:
+            new_order.products.append(cart_item.product)
+
+        # Add the order to the database
+        db.session.add(new_order)
+        db.session.commit()
+
+        # Clear the cart
+        CartItem.query.delete()
+        db.session.commit()
+
+        return jsonify({'message': 'Order placed successfully'})
 
 
 if __name__ == "__main__":
