@@ -169,8 +169,8 @@ def product_details(product_id):
         return "Product not found", 404
 
 
-@app.route('/checkout', methods=['POST'])
-def checkout():
+@app.route('/remove_product_from_cart', methods=['POST'])
+def remove_product_from_cart():
     # Delete the first cart item
     first_cart_item = CartItem.query.first()
     db.session.delete(first_cart_item)
